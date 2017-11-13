@@ -1,23 +1,47 @@
-const WebSocketServer = require('ws').Server,  
+//websocket服务
+const WebSocketServer = require('ws').Server,
 wss = new WebSocketServer({  
-    port: 3000,
-    verifyClient: socketVerify
+    port: 3000,	//监听端口
+    verifyClient: socketVerify //连接安全验证
 });  
+
+//url地址处理模块
 const nm_url = require('url');  
+
+//用户头像
 const headpic = 'static/headpic.jpg';
-var data_clientsInfo = {}; //客户端连接信息
+
+//客户端连接信息
+var data_clientsInfo = {}; 
+
+//客服帐号
+/*
+ * userId 用户标识，唯一
+ * username 登录名
+ * pws 登录密码
+ * nickName 昵称
+ * state 状态(0不在线,1在线)
+ * headpic 头像
+ */
 var accountList = [
 	{userId:'abaffasfasfw',username:'admin',pwd:'admin',nickName:'客服一',state:0,headpic:headpic},
 ];
-//验证连接
+
+//连接安全验证处理
 function socketVerify(info) {
 	let _arg = nm_url.parse(info.req.url,true).query;
 	return true;
 }
+
 //初始化连接  
 wss.on('connection', function(ws,info) {  
     let _arg = nm_url.parse(info.url,true).query;
 	_arg.nickName = _arg.userId;
+	
+	/**
+	 * type:1为客服身份
+	 * 客服登录时验证用户名和密码
+	 */
     if(_arg.type=='1'){
     	let checkLogin = login(_arg.userName,_arg.pwd);
 		let _sendData ={
@@ -32,6 +56,9 @@ wss.on('connection', function(ws,info) {
 		_arg.nickName = checkLogin.nickName;
 	}
     
+    /**
+     * 将用户信息以json的形式存到“客户端连接信息”中
+     */
 	data_clientsInfo[_arg.userId] = {
 		userId:_arg.userId,
 		nickName:_arg.nickName,
@@ -39,16 +66,17 @@ wss.on('connection', function(ws,info) {
 		type:_arg.type
 	};
 	
+	/**
+	 * 如果是咨询访客，则返回客服列表
+	 */
 	if(_arg.type=='0'){
 		getChatListSendToAdmin();
 	}
-
 	console.log('用户ID:'+_arg.userId+'连接');
-	//收到消息
+	//监听消息并处理
     ws.on('message', function(jsonStr) {  
     	let obj = JSON.parse(jsonStr);
     	onMessage(obj);
-        //ws.send('')
     });  
     //断开链接
     ws.on('close', function(close) {  
@@ -63,7 +91,6 @@ wss.on('connection', function(ws,info) {
         delete data_clientsInfo[_arg.userId];
     });
     function onMessage(oData){
-    	console.log(oData);
     	switch(oData.action){
     		case 'getChatList':
     			getChatList()
@@ -74,7 +101,9 @@ wss.on('connection', function(ws,info) {
     	}
     }
     
+    //转发消息给指定用户
     function sendTo(oData){
+    	//判断接收消息的用户是否存在“客户端连接信息”中
     	if(data_clientsInfo.hasOwnProperty(oData.toId) && data_clientsInfo.hasOwnProperty(oData.userId)){
 			let _sendData = {
 				action:'msg',
@@ -89,8 +118,10 @@ wss.on('connection', function(ws,info) {
     	}
     }
     
+    //客服登录
     function login(userName,pwd){
     	let _returnData = {state:0,userId:0,nickName:'',chatList:[]};
+    	//验证用户名密码是否正确，正确则返回客服信息以及修改状态为在线
     	for(item of accountList){
     		if(item.username==userName && item.pwd==pwd){
     			item.state = 1;
@@ -114,11 +145,13 @@ wss.on('connection', function(ws,info) {
     	return _returnData;
     }
     
+    //将在线访客发送给客服
     function getChatListSendToAdmin(){
     	let _sendData = {
 			action:'chatList',
 			data:[]
 		}
+    	//遍历出所有咨询访客的信息
     	for(let value of Object.values(data_clientsInfo)) {
 			if(value.type==0){
 				_sendData.data.push({
@@ -129,7 +162,7 @@ wss.on('connection', function(ws,info) {
 	    		});
 			}
 		}
-    	
+    	//将咨询访客的信息广播给客服人员
     	for(let value of Object.values(data_clientsInfo)) {
 			if(value.type==1){
 				console.log(_sendData);
@@ -138,6 +171,7 @@ wss.on('connection', function(ws,info) {
 		}
     }
     
+   //将在客服信息发送给咨询访客
     function getChatList(){
     	let _sendData = {
 			action:'chatList',

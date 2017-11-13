@@ -37,6 +37,9 @@
 	let loading;
     export default {
 	  	name:'chat',
+	  	/*
+	  	 * type(0为访客端，1为客服端)
+	  	 */
 	  	props:{
 	  		chartype:{
 	  			type:String,
@@ -113,6 +116,7 @@
 	    	onMessage(action,data){
 	    		var _vueThis = this;
 	    		switch(action){
+	    			//处理左边栏聊天列表
 	    			case 'chatList':
 	    				for (let item of data) {
 	    					let _findIndex = -1;
@@ -135,7 +139,7 @@
 	    					this.closeWs();
 	    				}
 	    			break;
-	    			
+	    			//处理客服登录
 	    			case 'login':
 	    				if(data.state==0){
 		    				this.$notify({
@@ -156,7 +160,7 @@
 		    				this.show = true;
 		    			}
 	    			break;
-	    			
+	    			//收到消息处理
 	    			case 'msg':
     					let _findIndex = -1;
     					this.chatList.forEach((chatItem,index)=>{
