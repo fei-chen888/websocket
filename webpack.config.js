@@ -56,15 +56,16 @@ module.exports = {
        },
         {test: /\.html$/,loader:'html-loader'},
         {test: /\.(png|jpg|jpge)$/, loader: 'file-loader',query:{
-        	name:'./static/images/[name].[ext]'
+        	name:'./static/[name].[ext]',
+        	publicPath:'../'
         }},
         {
 			    test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
 			    loader: 'file-loader',
 			    query: {
 			      limit: 10000,
-			      name: './fonts/[name].[ext]',
-			      publicPath:'/'
+			      name: './static/[name].[ext]',
+			      publicPath:'../'
 			    }
 		  	}
     ]
@@ -83,7 +84,7 @@ module.exports = {
         dry:      false
 	    }
 	  ),
-		new ExtractTextPlugin("./static/css/style.min.css"),
+		new ExtractTextPlugin("./static/style.min.css"),
 	  new webpack.optimize.CommonsChunkPlugin({
         names: ['vendor'],
     }),/*

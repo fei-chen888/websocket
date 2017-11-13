@@ -4,9 +4,10 @@ wss = new WebSocketServer({
     verifyClient: socketVerify
 });  
 const nm_url = require('url');  
+const headpic = 'static/headpic.jpg';
 var data_clientsInfo = {}; //客户端连接信息
 var accountList = [
-	{userId:'abaffasfasfw',username:'admin',pwd:'admin',nickName:'客服一',state:0,headpic:'static/images/headpic.jpg'},
+	{userId:'abaffasfasfw',username:'admin',pwd:'admin',nickName:'客服一',state:0,headpic:headpic},
 ];
 //验证连接
 function socketVerify(info) {
@@ -104,7 +105,7 @@ wss.on('connection', function(ws,info) {
 					_returnData.chatList.push({
 						userId:value.userId,
 						nickName:value.nickName,
-						headpic:'static/images/headpic.jpg',
+						headpic:headpic,
 						state:1
 					});
 				}
@@ -121,7 +122,7 @@ wss.on('connection', function(ws,info) {
     	for(let value of Object.values(data_clientsInfo)) {
 			if(value.type==0){
 				_sendData.data.push({
-	    			headpic:'static/images/headpic.jpg',
+	    			headpic:headpic,
 	    			nickName:value.nickName,
 	    			state:0,
 	    			userId:value.userId
